@@ -1,0 +1,105 @@
+@model List<TaskFlow.Web.Models.TaskItem>
+
+@{
+    ViewData["Title"] = "TaskFlow";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">📋 TaskFlow</h1>
+
+    <!-- Add Task Form -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">Add New Task</div>
+        <div class="card-body">
+            <form asp-action="Create" method="post" class="row g-3">
+                <div class="col-md-4">
+                    <input name="Title" class="form-control" placeholder="Task title" required />
+                </div>
+                <div class="col-md-4">
+                    <input name="Description" class="form-control" placeholder="Description" />
+                </div>
+                <div class="col-md-2">
+                    <select name="Priority" class="form-select">
+                        <option>Low</option>
+                        <option selected>Medium</option>
+                        <option>High</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Add Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Task Table -->
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var task in Model)
+            {
+                <tr class="@(task.IsCompleted ? "table-success" : "")">
+                    <td>@task.Id</td>
+                    <td>@task.Title</td>
+                    <td>@task.Description</td>
+                    <td>
+                        <span class="badge bg-@(task.Priority == "High" ? "danger" :
+                                               task.Priority == "Medium" ? "warning" : "success")">
+                            @task.Priority
+                        </span>
+                    </td>
+                    <td>@(task.IsCompleted ? "✅ Done" : "⏳ Pending")</td>
+                    <td>@task.CreatedAt.ToString("MMM dd, HH:mm")</td>
+                    <td>
+                        @if (!task.IsCompleted)
+                        {
+                            <form asp-action="Complete" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@task.Id" />
+                                <button class="btn btn-sm btn-success">Complete</button>
+                            </form>
+                        }
+                        <form asp-action="Delete" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@task.Id" />
+                            <button class="btn btn-sm btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- Stats -->
+    <div class="row mt-3">
+        <div class="col-md-4">
+            <div class="card text-white bg-info">
+                <div class="card-body text-center">
+                    <h5>Total: @Model.Count</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-success">
+                <div class="card-body text-center">
+                    <h5>Completed: @Model.Count(t => t.IsCompleted)</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-warning">
+                <div class="card-body text-center">
+                    <h5>Pending: @Model.Count(t => !t.IsCompleted)</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

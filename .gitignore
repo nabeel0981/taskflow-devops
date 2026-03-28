@@ -1,0 +1,8 @@
+**/bin/
+**/obj/
+**/.vs/
+*.user
+.env
+*.pfx
+*.key
+.DS_Store
