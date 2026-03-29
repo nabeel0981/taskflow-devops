@@ -87,19 +87,26 @@ resource "aws_instance" "taskflow_server" {
   vpc_security_group_ids = [aws_security_group.taskflow_sg.id]
   key_name               = "taskflow-key"
 
-  user_data = <<-EOF
-    #!/bin/bash
-    set -e
-    apt-get update -y
-    curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
-    sh /tmp/get-docker.sh
-    systemctl start docker
-    systemctl enable docker
-    usermod -aG docker ubuntu
+  user_data = <<-USERDATA
+#!/bin/bash
+set -e
+exec > /var/log/user-data.log 2>&1
 
-    mkdir -p /home/ubuntu/app
-    cat > /home/ubuntu/app/docker-compose.yml << 'COMPOSE'
-version: '3.8'
+echo "=== Starting setup ==="
+apt-get update -y
+
+echo "=== Installing Docker ==="
+curl -fsSL https://get.docker.com | sh
+systemctl start docker
+systemctl enable docker
+usermod -aG docker ubuntu
+
+echo "=== Creating app directory ==="
+mkdir -p /home/ubuntu/app
+chown ubuntu:ubuntu /home/ubuntu/app
+
+echo "=== Writing docker-compose.yml ==="
+cat > /home/ubuntu/app/docker-compose.yml << 'COMPOSE'
 services:
   taskflow:
     image: nabeeldevopsengineer/taskflow:latest
@@ -125,9 +132,12 @@ services:
     restart: unless-stopped
 COMPOSE
 
-    cd /home/ubuntu/app
-    docker compose up -d
-  EOF
+echo "=== Starting containers ==="
+cd /home/ubuntu/app
+docker compose up -d
+
+echo "=== Setup complete ==="
+USERDATA
 
   tags = { Name = "taskflow-server" }
 }
